@@ -1,0 +1,7 @@
+test_data
+**__pycache__**
+**.so
+**.o
+build
+**.egg-info
+.vscode

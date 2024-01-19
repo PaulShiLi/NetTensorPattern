@@ -1,0 +1,24 @@
+[project]
+name = "nettensorpat"
+version = "2024.1.10"
+description = "NetworkTensorPattern is a Python package for finding patterns in tensors."
+keywords = ["NetworkTensorPattern", "NetPat"]
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">= 3.7"
+authors = [
+  {name = "Paul Li", email = "paul.shi.li.05@gmail.com"},
+]
+maintainers = [
+  {name = "Paul Li", email = "paul.shi.li.05@gmail.com"}
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = [
+  "setuptools >= 69.0.3",
+  "Cython >= 3.0.7"
+]
+
+# build-backend = "setuptools.build_meta"

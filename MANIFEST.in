@@ -1,0 +1,7 @@
+graft src
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude test_data
+global-exclude temp
+global-exclude build
+global-exclude dist
