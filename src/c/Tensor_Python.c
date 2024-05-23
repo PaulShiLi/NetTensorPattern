@@ -322,8 +322,8 @@ void free_global_variables()
 	free_VEC_UINT( &binary_vec_genes_index_excluded );
 }
 
-// static PyObject* Tensor_Python(PyObject* self, PyObject* args, PyObject* kwargs)
-static PyObject* Tensor_Python(PyObject* args, PyObject* kwargs) // Comment this out if PyCFunction error occurs
+static PyCFunctionWithKeywords* Tensor_Python(PyObject* self, PyObject* args, PyObject* kwargs)
+// static PyObject* Tensor_Python(PyObject* args, PyObject* kwargs) // Comment this out if PyCFunction error occurs
 {
 	char parms[MAXCHAR], logFile[MAXCHAR], tmpString[MAXCHAR];
 	FILE* stream;
@@ -569,7 +569,7 @@ static PyObject* Tensor_Python(PyObject* args, PyObject* kwargs) // Comment this
 static PyMethodDef methods_array[] = {
     {
         "frequentClustering",
-        Tensor_Python,
+        (PyCFunction)Tensor_Python,
         METH_VARARGS | METH_KEYWORDS,
         "Function for calculating the frequent clustering of a network"
     },
