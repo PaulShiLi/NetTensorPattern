@@ -322,11 +322,12 @@ void free_global_variables()
 	free_VEC_UINT( &binary_vec_genes_index_excluded );
 }
 
-static PyObject* Tensor_Python(PyObject* self, PyObject* args, PyObject* kwargs)
+// static PyObject* Tensor_Python(PyObject* self, PyObject* args, PyObject* kwargs)
+static PyObject* Tensor_Python(PyObject* args, PyObject* kwargs) // Comment this out if PyCFunction error occurs
 {
 	char parms[MAXCHAR], logFile[MAXCHAR], tmpString[MAXCHAR];
 	FILE* stream;
-	unsigned int nRemovedEdges, ret, i, argPass;
+	unsigned int ret, i, argPass;
     char *maskStrategy = NULL, *overlapPattern = NULL, *fnResults = NULL, *dataFileExt = NULL, *datasetListPaths = NULL, *netPaths = NULL, *outPath = NULL;
 
 	assign_default_params();

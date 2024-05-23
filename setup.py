@@ -22,7 +22,7 @@ class Pnt_Cmds:
             📝 Files scanned:
             __FILE_LIST__
             📝 Command:
-            \tsh build.sh
+            \tsh compile.sh
             """
         ).replace("__FILE_LIST__", fileList)[1:-1])
         
@@ -76,7 +76,7 @@ setuptools.setup(
     package_dir={"": f"src"},
     packages=["src"],
     include_package_data=True,
-    scripts=["build.sh"],
+    scripts=["compile.sh"],
     cmdclass={
         "pnt": pnt
     }

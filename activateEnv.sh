@@ -86,7 +86,7 @@ On_IWhite='\033[0;107m'  # White
 # Functions
 
 printSection() {
-    echo "\n==============================\n"
+    echo -e "\n==============================\n"
 }
 
 # Function to accept a string parameter to set color
@@ -113,16 +113,16 @@ printHeader() {
         toPrint+="\n"
     fi
     
-    echo "${toPrint}"
+    echo -e "${toPrint}"
     setColor $Color_Off
 }
 
 printAlreadyInstalled() {
     setColor $Yellow
     if [[ -z $2 ]]; then
-        echo "[=] $1 is already installed"
+        echo -e "[=] $1 is already installed"
     else
-        echo "[=] $1 $2"
+        echo -e "[=] $1 $2"
     fi
     setColor $Color_Off
 }
@@ -130,9 +130,9 @@ printAlreadyInstalled() {
 printInstalled() {
     setColor $Green
     if [[ -z $2 ]]; then
-        echo "[+] $1 installed"
+        echo -e "[+] $1 installed"
     else
-        echo "[+] $1 $2"
+        echo -e "[+] $1 $2"
     fi
     setColor $Color_Off
 }
@@ -140,9 +140,9 @@ printInstalled() {
 printNotInstalled() {
     setColor $Red
     if [[ -z $2 ]]; then
-        echo "[!] $1 not found"
+        echo -e "[!] $1 not found"
     else
-        echo "[!] $1 $2"
+        echo -e "[!] $1 $2"
     fi
     setColor $Color_Off
 }
@@ -150,9 +150,9 @@ printNotInstalled() {
 printUninstall() {
     setColor $Red
     if [[ -z $2 ]]; then
-        echo "[-] $1 uninstalled"
+        echo -e "[-] $1 uninstalled"
     else
-        echo "[-] $1 $2"
+        echo -e "[-] $1 $2"
     fi
     setColor $Color_Off
 }
@@ -160,140 +160,48 @@ printUninstall() {
 printInProgress() {
     setColor $White
     if [[ -z $2 ]]; then
-        echo "[.] $1 in progress"
+        echo -e "[.] $1 in progress"
     else
-        echo "[.] $1 $2"
+        echo -e "[.] $1 $2"
     fi
     setColor $Color_Off
 }
 
 #######################################
 
-OS=$(uname -s)
 rootDir=$(dirname "${BASH_SOURCE[0]}")
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 #######################################
+
+# Some checks before running the script
+    
+# Check if script is using source to run
 
 printSection
-echo "OS: $OS"
-echo "Root directory: $rootDir"
-echo "Script path: $SCRIPTPATH"
+printHeader "Checking execution environment and privileges:" "no lines"
 
-#######################################
-
-printSection
-printHeader "Loading dependencies..."
-
-# Get dependencies from dependencies.json
-deps=$(cat dependencies.json | jq .)
-KeyOS=""
-
-if [[ $OS == "Darwin" ]]; then
-    KeyOS="Darwin"
-elif [[ $OS == "Linux" ]]; then
-    KeyOS="Linux"
-fi
-
-echo "Dependencies loaded"
-
-#######################################
-
-# Update and upgrade existing packages
-
-printSection
-printHeader "Updating and upgrading existing packages..."
-
-setColor $Grey
-
-if [[ $OS == "Darwin" ]]; then
-    brew update && brew upgrade
-elif [[ $OS == "Linux" ]]; then
-    sudo apt-get update -y && sudo apt-get upgrade -y
-fi
-
-setColor $Color_Off
-
-#######################################
-
-# Access each dependency under the key Darwin and print each key and value
-# List of missing dependencies
-missingDeps=()
-
-echo $deps | jq -r ".$KeyOS | keys | .[]" | while read key; do
-    value=$(echo $deps | jq -r ".$KeyOS.\"$key\"")
-
-    # printInProgress $key
-
-    if ! command -v "$key" &>/dev/null; then
-        printNotInstalled $key
-        missingDeps+=($key)
-    else
-        printAlreadyInstalled $key
-    fi
-done
-
-# If there are missing dependencies, install them
-if [ ${#missingDeps[@]} -eq 0 ]; then
-    printHeader "All dependencies are installed" "section"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    printNotInstalled "Please run this script using source command!" " "
+    exit 1
 else
-    printHeader "Installing missing dependencies..." "section"
-    for dep in "${missingDeps[@]}"; do
-        # Access each dependency under the key Darwin, and each value have a list of commands of installing the dependency and iterate through each command
-        echo "Installing $dep..."
-        commands=$($deps | python -c "
-        import json, sys
-        DEPS=json.loads(sys.stdin.read())
-        print(DEPS['$KeyOS']['$dep'])
-        ")
-        
-    done
+    printAlreadyInstalled "Script is running using source command" " "
 fi
 
 #######################################
-
-# Check for local environment
-
-printSection
-
-setColor $Cyan
-echo "Checking for local environment...\n"
-setColor $Color_Off
 
 VENV="nettensor_env"
+
+printSection
+printHeader "Activating ${VENV}..." "section"
+
 if [ ! -d "$VENV" ]; then
     # Take action if $venv does exists
     printNotInstalled $VENV
-
-    setColor $Grey
-    echo "- Installing ${VENV}..."
-    setColor $Color_Off
-
-    python -m venv $VENV
-
-    printInstalled "${VENV} venv created"
+    exit 1
 else
     printAlreadyInstalled $VENV
 fi
 
-printHeader "Activating ${VENV}..." "section"
+source $rootDir/$VENV/bin/activate
 
-activate () {
-    . $rootDir/$VENV/bin/activate
-    echo "- ${VENV} activated"
-}
-
-activate
-
-printHeader "Installing Python packages..." "section"
-
-# Fetch Packages from requirements.txt
-setColor $Grey
-pip install -r $rootDir/requirements.txt
-setColor $Color_Off
-
-echo "\n- Python packages installed"
-
-#######################################
-
-printSection
+echo -e "- ${VENV} activated"
