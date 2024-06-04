@@ -1,50 +1,130 @@
-class _InitXYBy:
-    ONES: int = 0
-    RAND: int = -1
-    UNIT: int = -2
-    DEFAULT: int = ONES
+from typing import TypedDict, Literal, Optional, Annotated
+from dataclasses import dataclass, field
+from nettensorpat.Default import Default
+from colorama import Fore
 
-class _MaskStrategyName:
-    EDGES_PATTERN: str = "EDGES_PATTERN"
-    EDGES_ALLNETS: str = "EDGES_ALLNETS"
-    GENES: str = "GENES"
-    DEFAULT: str = EDGES_PATTERN
 
-class _OverlapPattern:
-    NONZEROS: str = "PATTERN_WITH_NONZEROS_XY"
-    MORE_NETS: str = "PATTERN_WITH_MORE_NETS"
-    MORE_GENES: str = "PATTERN_WITH_MORE_GENES"
-    BOTH: str = "PATTERN_WITH_BOTH"
-    DEFAULT: str = BOTH
+# Implement TypedDict for Default
+class Status(TypedDict):
+    status: bool
+    error: Optional[Literal["KeyError", "TypeError", "ValueError", "FileNotFoundError", "RelativePathError"]]
+    key: Optional[str]
+    msg: Optional[str]
 
-class _Path:
-    RESULTFILE_PREFIX: str = ""
-    RESULT: str = "./results"
-    DATASET_DEBUG_LIST: str = "./debug/debug_datasets"
-    NETWORKS_FOLDER: str = "./datasets"
-    DATAFILE_SUFFIX: str = ".sig"
 
-class Default:
-    NPATTERN_UNLIMITED: int = -1
-    MAXPATTERN: int = NPATTERN_UNLIMITED
-    
-    NITERATION: int = 20
-    NSTAGE: int = 20
-    
-    MINGENE: int = 3
-    MINNET: int = 3
-    MAXGENE: int = 50
-    NEDGES_LOAD: int = 1000000
-    MIN_DENSITY: float = 0.6
-    
-    RESUME_LASTRUN: int = False
-    
-    LOAD_UNWEIGHTED: bool = False
-    RESUME: bool = False
-    EXCLUDE_EDGES: bool = True
-    LEVEL = 3
-    
-    InitXYBy: _InitXYBy = _InitXYBy
-    MaskStrategyName: _MaskStrategyName = _MaskStrategyName
-    OverlapPattern: _OverlapPattern = _OverlapPattern
-    Path: _Path = _Path
+@dataclass
+class ValueRange:
+    a: tuple[Literal[">", ">="], float | int] | None
+    b: tuple[Literal["<", "<="], float | int] | None = field(default=None)
+
+    def validateVal(self, val: float | int, key: any = None) -> Status:
+        status = True
+        errorMsg = f"{Fore.RED}Warning:{Fore.RESET} Value for {Fore.CYAN}{key}{Fore.RESET} must be"
+
+        min = None
+        max = None
+
+        if self.a:
+            if ">" in self.a or ">=" in self.a:
+                min = self.a
+            else:
+                max = self.a
+        if self.b:
+            if "<" in self.b or "<=" in self.b:
+                max = self.b
+            else:
+                min = self.b
+
+        if min:
+            if min[0] == ">":
+                if val <= min[1]:
+                    errorMsg += f" greater than {Fore.YELLOW}{min[1]}{Fore.RESET}"
+                    status = False
+            elif min[0] == ">=":
+                if val < min[1]:
+                    errorMsg += f" greater than or equal to {Fore.YELLOW}{min[1]}{Fore.RESET}"
+                    status = False
+        if max:
+            if max[0] == "<":
+                if val >= max[1]:
+                    if not status:
+                        errorMsg += " and"
+                    else:
+                        status = False
+                    errorMsg += f" less than {Fore.YELLOW}{max[1]}{Fore.RESET}"
+            elif max[0] == "<=":
+                if val > max[1]:
+                    if not status:
+                        errorMsg += " and"
+                    else:
+                        status = False
+                    errorMsg += (
+                        f" less than or equal to {Fore.YELLOW}{max[1]}{Fore.RESET}"
+                    )
+
+        return {
+            "status": status,
+            "error": "ValueError" if not status else None,
+            "key": key if not status else None,
+            "msg": errorMsg if not status else None,
+        }
+
+
+class ConfigDict(TypedDict):
+    maxNode: int
+    mute: bool
+    local: bool
+    seedNode: int
+    maxPattern: int
+    nIteration: int
+    nStage: int
+    minNode: Annotated[int, ValueRange((">=", Default.MINGENE))]
+    minNetwork: Annotated[int, ValueRange((">=", 0), (">", Default.MINNET))]
+    minDensity: Annotated[float, ValueRange((">=", 0), ("<", 1))]
+    maskStrategy: Literal["EDGES_PATTERN", "EDGES_ALLNETS", "GENES"]
+    overlapPattern: Literal[
+        "PATTERN_WITH_NONZEROS_XY",
+        "PATTERN_WITH_MORE_NETS",
+        "PATTERN_WITH_MORE_GENES",
+        "PATTERN_WITH_BOTH",
+    ]
+    nEdgesLoad: int
+    loadUnweighted: bool
+    resume: bool
+    excludeEdges: bool
+    resultFilePrefix: Optional[str]
+    networkFileSuffix: Optional[str]
+    networksPath: Optional[str]
+    resultsPath: Optional[str]
+    level: Literal[1, 2, 3]
+
+@dataclass
+class Config:
+    maxNode: int = field(default=Default.MAXGENE)
+    mute: bool = field(default=False)
+    local: bool = field(default=False)
+    seedNode: int = field(default=Default.InitXYBy.DEFAULT)
+    maxPattern: int = field(default=Default.MAXPATTERN)
+    nIteration: int = field(default=Default.NITERATION)
+    nStage: int = field(default=Default.NSTAGE)
+    minNode: int = field(default=Default.MINGENE)
+    minNetwork: int = field(default=Default.MINNET)
+    minDensity: float = field(default=Default.MIN_DENSITY)
+    maskStrategy: Literal["EDGES_PATTERN", "EDGES_ALLNETS", "GENES"] = (
+        Default.MaskStrategyName.DEFAULT
+    )
+    overlapPattern: Literal[
+        "PATTERN_WITH_NONZEROS_XY",
+        "PATTERN_WITH_MORE_NETS",
+        "PATTERN_WITH_MORE_GENES",
+        "PATTERN_WITH_BOTH",
+    ] = field(default=Default.OverlapPattern.DEFAULT)
+    nEdgesLoad: int = field(default=Default.NEDGES_LOAD)
+    loadUnweighted: bool = field(default=Default.LOAD_UNWEIGHTED)
+    resume: bool = field(default=Default.RESUME)
+    excludeEdges: bool = field(default=Default.EXCLUDE_EDGES)
+    resultFilePrefix: str = field(default=Default.Path.RESULTFILE_PREFIX)
+    networkFileSuffix: str = field(default=Default.Path.DATAFILE_SUFFIX)
+    networksPath: str = field(default=Default.Path.NETWORKS_FOLDER)
+    resultsPath: str = field(default=Default.Path.RESULT)
+    level: Literal[1, 2, 3] = field(default=Default.LEVEL)

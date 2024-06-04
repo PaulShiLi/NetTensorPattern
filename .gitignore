@@ -6,3 +6,4 @@ build
 **.egg-info
 .vscode
 nettensor_env
+.ds_store
