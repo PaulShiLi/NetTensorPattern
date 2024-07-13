@@ -38,3 +38,7 @@ clean:
 	temp \
 	**__pycache__; \
 	yes | pip uninstall nettensorpat;
+
+pypi:
+	python setup.py sdist bdist_wheel;
+	twine upload dist/*

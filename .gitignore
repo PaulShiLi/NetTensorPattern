@@ -8,6 +8,8 @@ nettensor_env
 **.so
 **.o
 **.egg**
+**.tar.gz
+**.whl
 
 test/results/**
 
