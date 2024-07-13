@@ -1,6 +1,6 @@
 [project]
 name = "nettensorpat"
-version = "2024.1.10"
+version = "2024.7.13"
 description = "NetworkTensorPattern is a Python package for finding patterns in tensors."
 keywords = ["NetworkTensorPattern", "NetPat"]
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -18,7 +18,9 @@ where = ["src"]
 [build-system]
 requires = [
   "setuptools >= 69.0.3",
-  "Cython >= 3.0.7"
+  "Cython >= 3.0.7",
+  "colorama >= 0.4.6",
+  "dacite >= 1.8.1"
 ]
 
 # build-backend = "setuptools.build_meta"

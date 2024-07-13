@@ -1,3 +1,2 @@
 colorama==0.4.6
 dacite==1.8.1
-multipledispatch==1.0.0
