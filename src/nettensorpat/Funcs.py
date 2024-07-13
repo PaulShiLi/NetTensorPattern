@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import os
 import collections
-from typing import Optional, Literal
+from typing import Optional, Literal, Union
 import warnings
 from colorama import Fore
 import mmap
@@ -17,22 +17,28 @@ from nettensorpat.wrapper import Validation
 
 class Dataset:
     datasetList: collections.deque[str] = collections.deque()
+    dsPath: str
 
     def __init__(self, dsPaths: list[str | PosixPath] = None) -> None:
-        self.datasetList.extend(map(str, dsPaths) if dsPaths else [])
+        self.datasetList = collections.deque()
+        if dsPaths:
+            self.datasetList.extend(map(str, dsPaths))
 
     @classmethod
     def loadPaths(
-        self, dsPath: str | PosixPath, ext: str = Default.Path.DATAFILE_SUFFIX
-    ) -> None:
+        cls, dsPath: str | PosixPath, ext: str = Default.Path.DATAFILE_SUFFIX
+    ) -> 'Dataset':
+        dataset = cls()
         if isinstance(dsPath, str):
             dsPath = PosixPath(dsPath)
 
         Validation.validatePath(dsPath, "dsPath", msgType="Error")
 
+        dataset.dsPath = dsPath
+
         dsPath = str(dsPath.resolve())
 
-        self.datasetList.extend(
+        dataset.datasetList.extend(
             filter(
                 lambda x: x.endswith(ext),
                 map(
@@ -47,26 +53,22 @@ class Dataset:
                 )
             )
         )
-        return self
+        
+        # Sort the dataset list and sort via numbers if in format of name_number.ext
+        dataset.datasetList = sorted(dataset.datasetList, key=lambda x: int(x.split("/")[-1].split("_")[-1].split(".")[0]) if "_" in x else x)
+        
+        return dataset
 
     @classmethod
     def loadPathsFromFile(
-        self,
+        cls,
         dsListFile: str | PosixPath,
         ext: Optional[str] = Default.Path.DATAFILE_SUFFIX,
         dsDir: Optional[str | PosixPath] = None,
         delimiter: str = "\t",
         warn: bool = True,
-    ) -> None:
-        """Load dataset paths from a list file with the directory of the list file containing the datasets or a user specified directory.
-
-        Args:
-            dsListFile (str | PosixPath): Path to the list file containing dataset paths.
-            ext (str, optional): Extension of the dataset files. Defaults to Default.Path.DATAFILE_SUFFIX.
-            dsDir (str | PosixPath, optional): Directory containing the dataset files. Defaults to None.
-            delimiter (str, optional): Delimiter of the list file. Defaults to "\\t".
-            warn (bool, optional): Whether to show warnings. Defaults to True.
-        """
+    ) -> 'Dataset':
+        dataset = cls()
         warnings.filterwarnings("default")
         if not warn:
             warnings.filterwarnings("ignore")
@@ -83,6 +85,8 @@ class Dataset:
                 dsDir = PosixPath(dsDir)
             dsDir = dsDir.resolve()
 
+        dataset.dsPath = dsDir
+
         Validation.validatePath(dsListFile, "dsListFile", msgType="Error")
         Validation.validatePath(dsDir, "dsDir", msgType="Error")
 
@@ -91,14 +95,72 @@ class Dataset:
                 dsPath = dsDir / f"{line.strip().split(delimiter)[0]}.{ext}"
                 try:
                     Validation.validatePath(dsPath, "dsPath", warn=False)
-                    self.datasetList.append(dsPath)
+                    dataset.datasetList.append(dsPath)
                 except FileNotFoundError:
                     warnings.warn(
                         f"{Fore.RED}Error:{Fore.RESET} Dataset file {Fore.CYAN}{dsPath}{Fore.RESET} not found. Skipping",
                         UserWarning,
                     )
                     continue
-        return self
+        return dataset
+
+    @staticmethod
+    def loadPathsFromMultipleLists(
+        directory: str | PosixPath,
+        file_pattern: str = "selectedDatasets_{}.list",
+        start: Optional[int] = None,
+        end: Optional[int] = None,
+        listFileOnly: bool = False,
+        delimiter: str = "\t",
+    ) -> Union['Dataset', list[str | PosixPath]]:
+        """Loads multiple list files based on a pattern and a range.
+
+        Args:
+            directory (str | PosixPath): Directory containing the list files.
+            file_pattern (str, optional): Pattern of the filename, with a placeholder for the index. Defaults to 'selectedDatasets_{}.list'.
+            start (Optional[int], optional): Starting index for the range. Defaults to None.
+            end (Optional[int], optional): Ending index for the range. Defaults to None.
+            delimiter (str, optional): Delimiter used in the list files. Defaults to "\\t".
+
+        Returns:
+            Dataset: An instance of Dataset with the combined dataset list.
+        """
+        
+        if isinstance(directory, str):
+            directory = PosixPath(directory)
+        directory = directory.resolve()
+        
+        combined_dataset = Dataset()
+        combined_dataset.dsPath = directory
+
+        if start is None and end is None:
+            # Load all list files that match the pattern in the directory
+            list_files = sorted(directory.glob(file_pattern.replace('{}', '*')), key=lambda x: int(x.stem.split('_')[-1]))
+        else:
+            # Load list files in the specified range
+            list_files = [directory / file_pattern.format(i) for i in range(start, end + 1)]
+        
+        if listFileOnly:
+            return list_files
+        
+        for list_file in list_files:
+            if list_file.exists() and list_file.is_file():
+                with open(list_file, "r") as f:
+                    print(f"Loading {list_file}...")
+                    while line := f.readline():
+                        dsPath = directory / f"{line.strip().split(delimiter)[0]}"
+                        try:
+                            combined_dataset.datasetList.append(dsPath)
+                        except FileNotFoundError:
+                            warnings.warn(
+                                f"{Fore.RED}Error:{Fore.RESET} Dataset file {Fore.CYAN}{dsPath}{Fore.RESET} not found. Skipping",
+                                UserWarning,
+                            )
+                            continue
+            else:
+                print(f"File {list_file} does not exist or is not a file.")
+                
+        return combined_dataset
 
     @staticmethod
     def convertFromAdjacencyMatrix(
@@ -183,6 +245,14 @@ class Dataset:
     def fileType(
         dsPath: str | PosixPath,
     ) -> Literal["adj", "edge"]:
+        """Determines the type of dataset file.
+
+        Raises:
+            ValueError: Unable to determine delimiter in file.
+
+        Returns:
+            Literal["adj", "edge"]: Type of dataset file.
+        """
         COL_EDGE_FILE = 3
         
         if isinstance(dsPath, str):
@@ -233,3 +303,66 @@ class Dataset:
                 row += 1
         
         return "adj"
+
+    def generateList(
+        self,
+        saveDir: Optional[str | PosixPath] = None,
+        delimiter: str = "\t",
+        overwrite: bool = False,
+        num_parts: Optional[int] = None,
+    ) -> None:
+        """Generates a list of dataset paths, optionally split into multiple parts.
+
+        Args:
+            saveDir (Optional[str | PosixPath], optional): Directory to save the list files. Defaults to None.
+            delimiter (str, optional): Delimiter of the list files. Defaults to "\\t".
+            overwrite (bool, optional): Whether to overwrite the list files if they already exist. Defaults to False.
+            num_parts (Optional[int], optional): Number of parts to split the dataset list into. If None, all datasets are saved in one file.
+        """
+        
+        if isinstance(saveDir, str):
+            saveDir = PosixPath(saveDir)
+            saveDir = saveDir.resolve()     
+        
+        if not saveDir:
+            saveDir = self.dsPath.parent
+
+        total_files = len(self.datasetList)
+        if num_parts is None or num_parts <= 1:
+            list_file = saveDir / 'selectedDatasets.list'
+            if (list_file.exists() and list_file.is_file() and overwrite) or (not list_file.exists()):
+                with open(list_file, "w") as f:
+                    print("Generating list file...")
+                    f.write("\n".join(
+                        [
+                            f"{ds}{delimiter}{i}" for i, ds in enumerate(self.datasetList)
+                        ]
+                    ))
+            else:
+                warnings.warn(
+                    f"{Fore.RED}Error:{Fore.RESET} List file {Fore.CYAN}{list_file}{Fore.RESET} already exists. Skipping",
+                    UserWarning,
+                )
+        else:
+            batch_size = total_files // num_parts
+            for i in range(num_parts):
+                start_idx = i * batch_size
+                if i == num_parts - 1:  # Last batch takes the remainder
+                    end_idx = total_files
+                else:
+                    end_idx = start_idx + batch_size
+                batch = list(self.datasetList)[start_idx:end_idx]
+                list_file = saveDir / f'selectedDatasets_{i + 1}.list'
+                if (list_file.exists() and list_file.is_file() and overwrite) or (not list_file.exists()):
+                    with open(list_file, "w") as f:
+                        print(f"Generating list file {list_file}...")
+                        f.write("\n".join(
+                            [
+                                f"{ds}{delimiter}{idx}" for idx, ds in enumerate(batch)
+                            ]
+                        ))
+                else:
+                    warnings.warn(
+                        f"{Fore.RED}Error:{Fore.RESET} List file {Fore.CYAN}{list_file}{Fore.RESET} already exists. Skipping",
+                        UserWarning,
+                    )
