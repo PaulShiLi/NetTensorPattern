@@ -13,7 +13,7 @@ class Desc:
 class Pnt_Cmds:
     
     def compile():
-        fileList = '\t🗎 ' + '\n\t🗎 '.join([file for file in sorted(os.listdir(os.path.join(os.path.dirname(__file__), 'src', 'c'))) if file.endswith(".c") or file.endswith(".h")])
+        fileList = '\t ' + '\n\t '.join([file for file in sorted(os.listdir(os.path.join(os.path.dirname(__file__), 'src', 'c'))) if file.endswith(".c") or file.endswith(".h")])
         
         print(textwrap.dedent(
             f"""
