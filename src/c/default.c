@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 #include "UtilsOfTensor.h"
+#include "default.h"
 
 /*-- DATA OPTIONS --*/
 #define SIMULATION_DATA
 // #define REAL_DATA
 
 
-const int INIT_XY_BY_ONES = 0; // ones vector is a vector, all of whose elements are ONE
-const int INIT_XY_BY_RAND = -1; // random vector
-const int INIT_XY_BY_UNIT = -2; // unit vector is a vector in which there is only one element is ONE, the others are all ZERO
+// const int INIT_XY_BY_ONES = 0; // ones vector is a vector, all of whose elements are ONE
+// const int INIT_XY_BY_RAND = -1; // random vector
+// const int INIT_XY_BY_UNIT = -2; // unit vector is a vector in which there is only one element is ONE, the others are all ZERO
 const int INIT_XY_DEFAULT = INIT_XY_BY_ONES;
-const int NPATTERN_UNLIMITED = -1;
+// const int NPATTERN_UNLIMITED = -1;
 const int MAXPATTERN_DEFAULT = NPATTERN_UNLIMITED;
 
 const unsigned int NITERATION_DEFAULT = 20;
