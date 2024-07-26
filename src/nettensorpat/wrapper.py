@@ -227,7 +227,7 @@ class NetTensorPat:
             warnings.filterwarnings("ignore")
 
         geneTotal_validation = ValueRange(
-            (">=", 0), ("<=", DEFAULT_CONFIG.maxNode)
+            (">=", 0)#, ("<", DEFAULT_CONFIG.minNode)
         ).validateVal(geneTotal, "geneTotal")
         # Validate geneTotal
         if not geneTotal_validation["status"]:

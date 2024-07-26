@@ -1,5 +1,5 @@
 from nettensorpat import NetTensorPat, Typing, Dataset
-
+import nettensorpat
 
 """
 Level 1 (Default): Output .PATTERN
@@ -7,12 +7,13 @@ Level 2: Output .PATTERN .LOG
 Level 3: Output .PATTERN .LOG .DENSITIES
 """
 
-ds = Dataset.loadPathsFromMultipleLists(
-    directory="/Users/sub01/Datasets/contracted-nets_ds",
-    listFileOnly=True,
+ds = Dataset.loadPaths(
+    "/u/scratch/w/wenyuan/proj/paper_algorithm_2024.07/dataset"
 )
-
-print(ds)
+ds.generateList(
+    "/u/scratch/w/wenyuan/proj/paper_algorithm_2024.07/dataset",
+    overwrite=True
+)
 
 netTensor = NetTensorPat()
 
@@ -33,13 +34,13 @@ nettensorConfig: Typing.ConfigDict = {
     "local": True
 }
 
-success = netTensor.frequentClustering(
-    geneTotal=50,
-    networkListFile="./test/datasets/selectedDatasets.list",
-    config = nettensorConfig
-)
+# success = netTensor.frequentClustering(
+#     geneTotal=50,
+#     networkListFile="./test/datasets/selectedDatasets.list",
+#     config = nettensorConfig
+# )
 
-print(f"Code ran {'successfully' if success else 'unsuccessfully'}.")
+# print(f"Code ran {'successfully' if success else 'unsuccessfully'}.")
 
 
 # import timeit

@@ -335,7 +335,7 @@ class Dataset:
                     print("Generating list file...")
                     f.write("\n".join(
                         [
-                            f"{ds}{delimiter}{i}" for i, ds in enumerate(self.datasetList)
+                            f"{''.join(ds.split(f'{os.sep}')[-1].split('.')[:-1])}{delimiter}{i}" for i, ds in enumerate(self.datasetList)
                         ]
                     ))
             else:
@@ -358,7 +358,7 @@ class Dataset:
                         print(f"Generating list file {list_file}...")
                         f.write("\n".join(
                             [
-                                f"{ds}{delimiter}{idx}" for idx, ds in enumerate(batch)
+                                f"{''.join(ds.split(f'{os.sep}')[-1].split('.')[:-1])}{delimiter}{idx}" for idx, ds in enumerate(batch)
                             ]
                         ))
                 else:
