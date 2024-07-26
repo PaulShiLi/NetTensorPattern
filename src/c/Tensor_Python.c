@@ -213,10 +213,10 @@ int verify_args(
 		printf("Error: howtoInit_xy {%d} is greater than geneTotalNumber {%d}\n", howtoInit_xy, geneTotalNumber);
 		return FALSE;
 	}
-	if (howtoInit_xy != INIT_XY_BY_ONES && howtoInit_xy != INIT_XY_BY_RAND && howtoInit_xy != INIT_XY_BY_UNIT && isLocal == FALSE) {
-		printf("Error: howtoInit_xy {%d} is not a valid option\n", howtoInit_xy);
-		return FALSE;
-	}
+	// if (howtoInit_xy != INIT_XY_BY_ONES && howtoInit_xy != INIT_XY_BY_RAND && howtoInit_xy != INIT_XY_BY_UNIT && isLocal == FALSE) {
+	// 	printf("Error: howtoInit_xy {%d} is not a valid option\n", howtoInit_xy);
+	// 	return FALSE;
+	// }
 
 	if (useGivenResultFilename && strcmp(fn_results, PREFIX_RESULTFILE_DEFAULT) == 0) {
 		printf("Error: fn_results is empty\n");

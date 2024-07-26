@@ -480,11 +480,16 @@ int main(int argc, char *argv[])
 
 	copy_TENSOROFNETS( &t_backup, t );
 
-	localCluster_byMultipleRounds( &t, t_backup, parms_setting, nPattern_max, minGene, minNet, minDensity,
-		nIteration, mask_strategy_code, overlapPatternChoose, fn_results, maxGene, resume, removeHeavyFrequentEdges, level, mute );
-	
-	// LpRelax_byMultipleStrategies( &t, t_backup, parms_setting, nPattern_max, minGene, minNet, minDensity,
-	// 		nIteration, nStage, mask_strategy_code, overlapPatternChoose, fn_results, maxGene, resume, removeHeavyFrequentEdges, level, mute );
+	if (local==TRUE) {
+		printf("Local Cluster\n");
+        localCluster_byMultipleRounds( &t, t_backup, parms_setting, nPattern_max, minGene, minNet, minDensity,
+            nIteration, mask_strategy_code, overlapPatternChoose, fn_results, maxGene, resume, removeHeavyFrequentEdges, level, mute );
+    }
+    else {
+		printf("Global Cluster\n");
+        LpRelax_byMultipleStrategies( &t, t_backup, parms_setting, nPattern_max, minGene, minNet, minDensity,
+                nIteration, nStage, mask_strategy_code, overlapPatternChoose, fn_results, maxGene, resume, removeHeavyFrequentEdges, level, mute );
+    }
 
 	if (!mute) {
 		printf("Free space\n");
